@@ -1,0 +1,1 @@
+部署时将libc.so复制到/home/char中

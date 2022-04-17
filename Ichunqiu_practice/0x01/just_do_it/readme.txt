@@ -1,0 +1,1 @@
+部署时将flag.txt与just_do_it放在同一目录下，并设置flag.txt为可读
