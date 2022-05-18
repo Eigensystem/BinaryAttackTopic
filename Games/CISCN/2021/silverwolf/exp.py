@@ -99,10 +99,6 @@ fopen_addr = 0x7ee30
 
 
 
-
-
-
-
 free_hook_addr = main_arena_addr + 0x1ca8
 system_addr = main_arena_addr - 0x36d4d0
 log.info("free hook addr: " + hex(free_hook_addr))
