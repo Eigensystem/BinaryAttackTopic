@@ -1,6 +1,6 @@
 from pwn import *
 from LibcSearcher import *
-context(arch = "amd64", os = "Linux", log_level = "Debug")
+context(arch = "", os = "Linux", log_level = "Debug")
 elf = ELF("./hacknote")
 io = process("./hacknote")
 # io = remote("124.70.130.92", 60001)

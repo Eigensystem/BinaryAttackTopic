@@ -1,6 +1,6 @@
 from tabnanny import check
 from pwn import *
-context(arch = "amd64", os = "Linux", log_level = "Debug")
+context(arch = "i386", os = "Linux", log_level = "Debug")
 io = process("./calc")
 # io = remote("124.70.130.92", 60001)
 gdb.attach(io)
